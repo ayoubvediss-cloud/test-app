@@ -1,59 +1,92 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { supabase } from "./supabaseClient";
 import "./style.css";
 
 function App() {
+  const [contacts, setContacts] = useState([]);
   const [name, setName] = useState("");
-  const [message, setMessage] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("Loading contacts...");
+  const [saving, setSaving] = useState(false);
 
-  function handleSubmit(event) {
-    event.preventDefault();
+  async function loadContacts() {
+    const { data, error } = await supabase
+      .from("contacts")
+      .select("*")
+      .order("id", { ascending: false });
 
-    if (!name.trim()) {
-      setMessage("Please enter your name.");
+    if (error) {
+      setMessage("Error: " + error.message);
       return;
     }
 
-    setMessage(`Welcome, ${name.trim()}! Your app is working.`);
+    setContacts(data);
+    setMessage("");
+  }
+
+  useEffect(() => {
+    loadContacts();
+  }, []);
+
+  async function addContact(event) {
+    event.preventDefault();
+    setSaving(true);
+    setMessage("");
+
+    const { error } = await supabase
+      .from("contacts")
+      .insert([{ name, email }]);
+
+    if (error) {
+      setMessage("Error: " + error.message);
+    } else {
+      setName("");
+      setEmail("");
+      setMessage("Contact saved successfully!");
+      await loadContacts();
+    }
+
+    setSaving(false);
   }
 
   return (
     <main className="container">
       <div className="card">
-        <div className="logo">V</div>
+        <h1>Database Test</h1>
+        <p>Connected to Supabase PostgreSQL</p>
 
-        <p className="eyebrow">FIRST DEPLOYMENT</p>
-
-        <h1>My First Web App</h1>
-
-        <p className="description">
-          A simple React application, ready to deploy
-          using GitHub and Vercel.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="name">Your name</label>
-
+        <form onSubmit={addContact}>
           <input
-            id="name"
-            type="text"
-            placeholder="Enter your name"
+            placeholder="Contact name"
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(e) => setName(e.target.value)}
+            required
           />
 
-          <button type="submit">Test my app</button>
+          <input
+            type="email"
+            placeholder="Email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <button disabled={saving}>
+            {saving ? "Saving..." : "Save contact"}
+          </button>
         </form>
 
-        {message && (
-          <p className="message" role="status">
-            {message}
-          </p>
-        )}
+        {message && <p role="status">{message}</p>}
 
-        <div className="footer">
-          Built with React · Hosted on Vercel
-        </div>
+        <h2>Saved contacts ({contacts.length})</h2>
+
+        {contacts.map((contact) => (
+          <div className="contact" key={contact.id}>
+            <strong>{contact.name}</strong>
+            <div>{contact.email}</div>
+          </div>
+        ))}
       </div>
     </main>
   );
