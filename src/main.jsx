@@ -8,8 +8,10 @@ function App() {
   const [session, setSession] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [contactsLoading, setContactsLoading] = useState(false);
+  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -28,6 +30,33 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!session) {
+      setContacts([]);
+      return;
+    }
+
+    async function loadContacts() {
+      setContactsLoading(true);
+      setMessage("");
+
+      const { data, error } = await supabase
+        .from("contacts")
+        .select("id, name, email, created_at")
+        .order("id", { ascending: false });
+
+      if (error) {
+        setMessage("Could not load contacts: " + error.message);
+      } else {
+        setContacts(data ?? []);
+      }
+
+      setContactsLoading(false);
+    }
+
+    loadContacts();
+  }, [session]);
+
   async function handleLogin(event) {
     event.preventDefault();
     setSubmitting(true);
@@ -44,23 +73,53 @@ function App() {
 
   async function handleLogout() {
     const { error } = await supabase.auth.signOut();
-    setMessage(error ? error.message : "You have signed out.");
+    if (error) setMessage(error.message);
+    else setMessage("");
   }
 
   if (loading) {
     return <main className="container"><div className="card">Loading...</div></main>;
   }
 
-  if (session) {
+  if (!session) {
     return (
       <main className="container">
         <div className="card">
           <div className="logo">V</div>
-          <h1>Welcome!</h1>
-          <p>You are successfully logged in.</p>
-          <p className="contact">{session.user.email}</p>
-          <button onClick={handleLogout}>Sign out</button>
-          {message && <p role="status">{message}</p>}
+          <p className="eyebrow">VEDISS ORDERS</p>
+          <h1>Sign in</h1>
+          <p className="description">
+            Enter your account details to access the application.
+          </p>
+
+          <form onSubmit={handleLogin}>
+            <label htmlFor="email">Email address</label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <button type="submit" disabled={submitting}>
+              {submitting ? "Signing in..." : "Sign in"}
+            </button>
+          </form>
+
+          {message && <p className="message">{message}</p>}
+          <div className="footer">Secure sign-in powered by Supabase</div>
         </div>
       </main>
     );
@@ -68,44 +127,55 @@ function App() {
 
   return (
     <main className="container">
-      <div className="card">
+      <div className="card contacts-card">
         <div className="logo">V</div>
         <p className="eyebrow">VEDISS ORDERS</p>
-        <h1>Sign in</h1>
+        <h1>Contacts</h1>
         <p className="description">
-          Enter your account details to access the application.
+          Signed in as {session.user.email}
         </p>
 
-        <form onSubmit={handleLogin}>
-          <label htmlFor="email">Email address</label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+        <button onClick={handleLogout}>Sign out</button>
 
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+        {message && <p className="message">{message}</p>}
 
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
+        <h2>Contacts database</h2>
 
-        {message && <p className="message" role="status">{message}</p>}
-        <div className="footer">Secure sign-in powered by Supabase</div>
+        {contactsLoading ? (
+          <p>Loading contacts...</p>
+        ) : (
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {contacts.map((contact) => (
+                  <tr key={contact.id}>
+                    <td>{contact.id}</td>
+                    <td>{contact.name}</td>
+                    <td>{contact.email}</td>
+                    <td>
+                      {contact.created_at
+                        ? new Date(contact.created_at).toLocaleDateString()
+                        : "—"}
+                    </td>
+                  </tr>
+                ))}
+                {!contactsLoading && contacts.length === 0 && (
+                  <tr>
+                    <td colSpan="4">No contacts found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </main>
   );

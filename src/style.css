@@ -121,3 +121,38 @@ button:hover {
   border-radius: 8px;
   overflow-wrap: anywhere;
 }
+
+
+
+
+.contacts-card {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+th,
+td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+  background: #f3f4f6;
+}
+
+td {
+  overflow-wrap: anywhere;
+}
