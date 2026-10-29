@@ -1,92 +1,111 @@
+
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { supabase } from "./supabaseClient";
 import "./style.css";
 
 function App() {
-  const [contacts, setContacts] = useState([]);
-  const [name, setName] = useState("");
+  const [session, setSession] = useState(null);
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("Loading contacts...");
-  const [saving, setSaving] = useState(false);
-
-  async function loadContacts() {
-    const { data, error } = await supabase
-      .from("contacts")
-      .select("*")
-      .order("id", { ascending: false });
-
-    if (error) {
-      setMessage("Error: " + error.message);
-      return;
-    }
-
-    setContacts(data);
-    setMessage("");
-  }
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    loadContacts();
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) setMessage(error.message);
+      setSession(data?.session ?? null);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  async function addContact(event) {
+  async function handleLogin(event) {
     event.preventDefault();
-    setSaving(true);
+    setSubmitting(true);
     setMessage("");
 
-    const { error } = await supabase
-      .from("contacts")
-      .insert([{ name, email }]);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (error) {
-      setMessage("Error: " + error.message);
-    } else {
-      setName("");
-      setEmail("");
-      setMessage("Contact saved successfully!");
-      await loadContacts();
-    }
+    if (error) setMessage(error.message);
+    setSubmitting(false);
+  }
 
-    setSaving(false);
+  async function handleLogout() {
+    const { error } = await supabase.auth.signOut();
+    setMessage(error ? error.message : "You have signed out.");
+  }
+
+  if (loading) {
+    return <main className="container"><div className="card">Loading...</div></main>;
+  }
+
+  if (session) {
+    return (
+      <main className="container">
+        <div className="card">
+          <div className="logo">V</div>
+          <h1>Welcome!</h1>
+          <p>You are successfully logged in.</p>
+          <p className="contact">{session.user.email}</p>
+          <button onClick={handleLogout}>Sign out</button>
+          {message && <p role="status">{message}</p>}
+        </div>
+      </main>
+    );
   }
 
   return (
     <main className="container">
       <div className="card">
-        <h1>Database Test</h1>
-        <p>Connected to Supabase PostgreSQL</p>
+        <div className="logo">V</div>
+        <p className="eyebrow">VEDISS ORDERS</p>
+        <h1>Sign in</h1>
+        <p className="description">
+          Enter your account details to access the application.
+        </p>
 
-        <form onSubmit={addContact}>
+        <form onSubmit={handleLogin}>
+          <label htmlFor="email">Email address</label>
           <input
-            placeholder="Contact name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-
-          <input
+            id="email"
             type="email"
-            placeholder="Email address"
+            autoComplete="email"
+            placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
 
-          <button disabled={saving}>
-            {saving ? "Saving..." : "Save contact"}
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <button type="submit" disabled={submitting}>
+            {submitting ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
-        {message && <p role="status">{message}</p>}
-
-        <h2>Saved contacts ({contacts.length})</h2>
-
-        {contacts.map((contact) => (
-          <div className="contact" key={contact.id}>
-            <strong>{contact.name}</strong>
-            <div>{contact.email}</div>
-          </div>
-        ))}
+        {message && <p className="message" role="status">{message}</p>}
+        <div className="footer">Secure sign-in powered by Supabase</div>
       </div>
     </main>
   );

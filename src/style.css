@@ -112,3 +112,12 @@ button:hover {
   font-size: 12px;
   text-align: center;
 }
+
+
+
+.contact {
+  padding: 12px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
