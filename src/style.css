@@ -1,0 +1,114 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  padding: 40px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.06);
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #111827;
+  color: white;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.eyebrow {
+  margin-top: 28px;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+h1 {
+  margin: 12px 0;
+  font-size: 32px;
+  letter-spacing: -1px;
+}
+
+.description {
+  color: #6b7280;
+  line-height: 1.7;
+}
+
+form {
+  display: grid;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  font-size: 16px;
+}
+
+input:focus {
+  outline: 2px solid #9ca3af;
+  outline-offset: 2px;
+}
+
+button {
+  padding: 14px;
+  border: none;
+  border-radius: 9px;
+  background: #111827;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #374151;
+}
+
+.message {
+  padding: 12px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  font-size: 14px;
+}
+
+.footer {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+  color: #9ca3af;
+  font-size: 12px;
+  text-align: center;
+}
